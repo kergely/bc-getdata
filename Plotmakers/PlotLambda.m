@@ -52,15 +52,15 @@ for i=1:5
 end
 
 hold on
-plot(Res(1:end,1),lambda(1:end,1),'bo')
-plot(Res(:,2),lambda(:,2),'rx')
-plot(Res(:,3),lambda(:,3),'ks')
-plot(Res(:,4),lambda(:,4),'g*')
-plot(linspace(0,2e5),arrayfun(@Hidsima,linspace(0,2e5)))
-plot(linspace(0,2e5),arrayfun(@Blasius,linspace(0,2e5)))
+semilogx(Res(1:end,1),lambda(1:end,1),'bo')
+semilogx(Res(:,2),lambda(:,2),'rx')
+semilogx(Res(:,3),lambda(:,3),'ks')
+semilogx(Res(:,4),lambda(:,4),'g*')
+semilogx(linspace(1e3,2e5),arrayfun(@Hidsima,linspace(1e3,2e5)))
+semilogx(linspace(1e3,2e5),arrayfun(@Blasius,linspace(1e3,2e5)))
 legend('Üres','0 szögű BC','5 fokos BC','10 fokos BC','Hidraulikailag sima cső','Blasius képlet')
 title('\lambda')
 xlabel('Reynolds-szám')
-xlim([0,2e5])
+xlim([1e3,2e5])
 ylabel('\lambda')
 saveas(gcf,'Lambdak_uj.png')

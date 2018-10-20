@@ -326,7 +326,7 @@ classdef Measurement
         %===============================================
         %>@brief Calculates the pressure loss coefficient of the second tube part
         %>
-        %>Calculates the pressure loss coefficient of the second tube part. The displacement between the Blasius-predicted and the actual \t$ \lambda \t$ is calculated, and assumed constant. After this the Blasius-formula is used to calculate a friction factor at the Reynolds number belonging to the second section of the tube, and then the displacement is reapplied.
+        %>Calculates the pressure loss coefficient of the second tube part. The displacement between the Blasius-predicted and the actual \f$ \lambda \f$ is calculated, and assumed constant. After this the Blasius-formula is used to calculate a friction factor at the Reynolds number belonging to the second section of the tube, and then the displacement is reapplied.
         %>
         %>@param None needed
         %>@return The loss coefficient of the second part of the system
@@ -354,7 +354,7 @@ classdef Measurement
             lambda = obj.lambda2();
             load constants.mat D_big small_end
             % Ehelyett az legyen, h a minimum pont legyen az első
-            small_end = small_end+5;
+            small_end = small_end+29; %TODO ezt ellenőrizni
             v = obj.vel;
             locs = obj.listloc();
             locs(1:small_end) = [];

@@ -4,7 +4,7 @@ filenames_BCalap_length = {'../Adatok/BC alap/10Hz/3sec_bal/180925_BC_alap.txt',
     '../Adatok/BC alap/40Hz/3sec_bal/181002_BC_alap_40Hz_3sec_bal.txt',...
     '../Adatok/BC alap/50Hz/3sec_bal/181002_BC_alap_50Hz_3sec_bal.txt'};
 
-meas = Measurement(filenames_BCalap_length{5});
+meas = Measurement(filenames_BCalap_length{1});
 beta = meas.fit_curve();
 gamma = meas.retrofit_curve();
 
