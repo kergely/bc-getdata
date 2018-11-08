@@ -8,6 +8,7 @@ L_step = 50e-3; %[m]
 dist_BC = 7.9250; %[[m] - Borda-Carnot location
 %Borda-Carnot between 401 and 329
 small_end = 40; %Small tube end
+small_end_central = 9;
 %inflow measurement settings
 epsilon = 1.0; % [-]
 alpha = 0.598; %[-]

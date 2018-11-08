@@ -1,7 +1,8 @@
 %>@file Meas_location.m
 %>@brief Contains the class describing one measurement location.
 %================================================================
-%>@brief The class of the
+%>@brief The class of one measurement location, contains functions related
+%>to that 
 classdef Meas_location
 
     properties
@@ -126,7 +127,8 @@ classdef Meas_location
         %=============================================
         %>@brief Check the histogram of a measuremet location
         %>
-        %> Plots the histogram and returns the sigma of the distribution
+        %> Plots the histogram and returns the sigma of the distribution.
+        %> Only for testing purposes.
         %>
         %>@param plot whether to actually show the plot or not
         %>@return A number containg sigma
@@ -134,18 +136,11 @@ classdef Meas_location
         function sigmap = sigmap(obj,plot)
             pvec = obj.getp();
             pdist = fitdist(pvec,'Normal');
-            %[h,p] = chi2gof(pvec,'CDF',pdist,'Nbins',15);
-            totest = (pvec-pdist.mu)/pdist.sigma;
-            [h,p] = kstest(totest);
-            h
-            p
+            [h,p] = chi2gof(pvec,'CDF',pdist); %They usually fail.
             if plot
                 histfit(pvec,15,'Normal') %histogram with normal fit
-                %histogram(pdist)
             end
             sigmap = pdist.mu;
         end
     end
 end
-
-

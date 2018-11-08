@@ -21,10 +21,13 @@ classdef Measurement
         samplerate
         %> length of sampling
         sampletime
-        % name of the measurement
+        %> name of the measurement
         name
-        % A list of the various measurements on the pressure taps we made during
+        %> A list of the various measurements on the pressure taps we made during
         measurements
+        %> Whether the measurement was done in the center with one
+        %>scanivalve, or as the original setup
+        central
     end
 
     methods
@@ -92,9 +95,9 @@ classdef Measurement
                 num = raw_data{1}(i,1);
                 if num > 0
                     meas_counter = meas_counter+1;
-                    p0 = raw_data{2}(i,7);
+                    p0 = raw_data{2}(i,7); p0=abs(p0);
                     p0_RMS = raw_data{2}(i,8);
-                    p_mean = raw_data{2}(i,9);
+                    p_mean = raw_data{2}(i,9); p_mean = abs(p_mean); %if the pressure was in the wring side of the meter 
                     p_RMS = raw_data{2}(i,10);
                     filepath = raw_data{4}{i};
                     filepath = strsplit(filepath,'\');
@@ -109,9 +112,9 @@ classdef Measurement
                 num = raw_data{1}(i,2);
                 if num > 0
                     meas_counter = meas_counter+1;
-                    p0 = raw_data{2}(i,7);
+                    p0 = raw_data{2}(i,7);p0=abs(p0);
                     p0_RMS = raw_data{2}(i,8);
-                    p_mean = raw_data{2}(i,11);
+                    p_mean = raw_data{2}(i,11);p_mean=abs(p_mean);
                     p_RMS = raw_data{2}(i,12);
                     filepath = raw_data{4}{i};
                     filepath = strsplit(filepath,'\');
@@ -137,6 +140,12 @@ classdef Measurement
                 end
             end
             %Should be sorted right now. Order: ascending by location.
+            if length(obj.measurements)<50
+                obj.central = true;
+            else
+                obj.central = false;
+            end
+            % Determinded whether it was a central measurement or not
         end
 
         %============================================
@@ -298,14 +307,20 @@ classdef Measurement
         %>@return The intercept and slope of the fitted curve.
         %============================================
         function beta = fit_curve(obj)
-            load tokeep.mat good %Gets good measurement points.
+            if obj.central
+                load tokeep.mat good_central
+                good_points = good_central;
+            else
+                load tokeep.mat good %Gets good measurement points.
+                good_points = good;
+            end
             locs = obj.listloc();
-            locs = locs(good);
-            L = ones(length(good),2);
+            locs = locs(good_points);
+            L = ones(length(good_points),2);
             L(:,2) = locs;
             %Gathered the necessary indices
             deltap = obj.listp();
-            deltap = deltap(good);
+            deltap = deltap(good_points);
             beta = L\deltap; %solves the matrix equation.
         end
 
@@ -336,7 +351,7 @@ classdef Measurement
             lambda1 = obj.lambda();
             Bla1 = Blasius(Re(1));
             lambdadisp = lambda1-Bla1; %Displacement between measured lambda and the Blasius formula
-            Bla2 = Blasius(Re(2)); %What Blasisu would say to the second point;
+            Bla2 = Blasius(Re(2)); %What Blasius would say to the second point;
             lambda2 = Bla2+lambdadisp;
         end
 
@@ -352,14 +367,19 @@ classdef Measurement
         function gamma = retrofit_curve(obj)
             gamma = zeros(2,1);
             lambda = obj.lambda2();
-            load constants.mat D_big small_end
+            load constants.mat D_big small_end small_end_central
             % Ehelyett az legyen, h a minimum pont legyen az első
-            small_end = small_end+29; %TODO ezt ellenőrizni
+            if obj.central()
+                small_disp = 19; %This amount of points is left out
+                begin_fit = small_end_central+small_disp;
+            else
+                begin_fit = small_end+29; %TODO ezt ellenőrizni
+            end
             v = obj.vel;
             locs = obj.listloc();
-            locs(1:small_end) = [];
+            locs(1:begin_fit) = [];
             p = obj.listp();
-            p(1:small_end) = [];
+            p(1:begin_fit) = [];
             %removed the locations before the BC, so that they do not affect the slope.
             gamma(2) =obj.rho()/2.0 * v(2)^2.0 * lambda * 1.0/D_big; %recalculates the slope
             order0 = ones(length(locs),1); %multiplicator of gamma2
@@ -379,7 +399,6 @@ classdef Measurement
             v = obj.vel();
             dp = obj.rho/2.0*(v(1)-v(2))^2.0;
         end
-
         %================================================
         %>@brief The theoretical pressure loss in the BC
         %>
@@ -390,12 +409,50 @@ classdef Measurement
         %>@return The pressure loss in the BC, gained by extraplating the pressures.
         %=========================================================
         function dp = BCloss_real(obj)
-            beta = obj.fit_curve();
-            gamma = obj.retrofit_curve();
-            load constants.mat dist_BC
-            p1 = beta(1)+beta(2)*dist_BC;
-            p2 = gamma(1)+gamma(2)*dist_BC;
-            dp = p1-p2;
+            if obj.central %different scheme for central cases
+                dp =0;
+                %TODO finish this
+            else
+                %for full measurements
+                beta = obj.fit_curve();
+                gamma = obj.retrofit_curve();
+                load constants.mat dist_BC
+                p1 = beta(1)+beta(2)*dist_BC;
+                p2 = gamma(1)+gamma(2)*dist_BC;
+                dp = p1-p2;
+            end
+        end
+        %=======================================================
+        %>@brief The efficiency of the BC
+        %>
+        %> Calculates the efficiency of the Borda-Carnot step, similarly to
+        %> that of the diffuser is
+        %> \f[ \eta = \frac{\Delta p_{real}}{\Delta p_{ideal}}\f]
+        %> @param
+        %> @return The efficiency of the Borda-Carnot step
+        %================================================
+        function eff = BCefficiency(obj)
+            Deltapreal = obj.BCloss_real();
+            Deltaptheor = obj.BCloss_theor();
+            eff = Deltapreal/Deltaptheor;
+        end
+        
+        
+        %=======================================================
+        %>@brief The loss factor of the BC
+        %>
+        %> Calculates the \f$\zeta\f$ loss factor of the Borda-Carnot step,
+        %> that of the diffuser as:
+        %> \f[ \zeta = \frac{2 \Delta p}{\rho \cdot (v_1 -v_2)^2} \f]
+        %> lower is desired. 
+        %> The theoretical this value would be 0.5.
+        %> @param
+        %> @return The efficiency of the Borda-Carnot step
+        %================================================
+        function zeta = BCzeta(obj)
+        v = obj.vel;
+        dp = obj.BCloss_real();
+        zeta = dp/(obj.rho/2)/(v(1)-v(2))^2;
         end
     end
 end

@@ -6,7 +6,7 @@ filenames_BCalap_length = {'../Adatok/BC alap/10Hz/3sec_bal/180925_BC_alap.txt',
     '../Adatok/BC alap/50Hz/3sec_bal/181002_BC_alap_50Hz_3sec_bal.txt'};
 
 
-load constants.mat small_end
+load constants.mat small_end dist_BC
 for num=5:5
     meas = Measurement(filenames_BCalap_length{num});
     listp = meas.listp();
@@ -38,7 +38,6 @@ for num=5:5
                 good(i) = 0;
             end
         end
-        disp(locs(29))
         good(good==0) = [];
         bad(bad==0) = [];
     end
@@ -47,5 +46,24 @@ for num=5:5
         trusted_nums(i) = meas.measurements{good(i)}.number;
     end
 end
+%This was for the base setup. The central one is much less complex
+%Just needs all points before the BC transfer
 
-save('tokeep.mat','trusted_nums','good') %Saved which points to keep
+
+central_example = Measurement("../Adatok/14deg/181106_10Hz_3sec_central_14deg/181106_10Hz_3sec_central_14deg.txt");
+locs = central_example.listloc();
+nums = central_example.listnum();
+numpoints = length(nums);
+trusted_nums_central = zeros(1,numpoints);
+good_central = zeros(1,numpoints);
+for index=1:numpoints
+   if locs(index) < dist_BC
+       trusted_nums_central(index) = nums(index);
+       good_central(index) = index;
+   end
+end
+%Dropping off empty elements
+trusted_nums_central(trusted_nums_central==0) = [];
+good_central(good_central == 0) = [];
+%Saving the thing
+save('tokeep.mat','trusted_nums','good','trusted_nums_central','good_central') %Saved which points to keep
