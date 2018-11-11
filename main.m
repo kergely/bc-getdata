@@ -9,3 +9,4 @@
 
 cd '/media/gergely/Data/Other data/BME/Anyagok/9.félév/Áramlástani méréstechnika/Mérés/bc-getdata' %Should be set to where the main file is
 addpath(genpath(pwd)) %Adds the current directory to the PATH so that functions actually do work
+ 
